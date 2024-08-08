@@ -1,0 +1,12 @@
+# cd to dir where dockerfile is present, build docker image with -t tag option
+docker build -t lakshmanlucky821/flask-mongodb-app .
+
+# run the container to check whether application container is runing or not
+docker run -d -p 5000:5000 --name flask-mongodb-app -e MONGODB_URI=mongodb://localhost:27017/ lakshmanlucky821/flask-mongodb-app
+
+# configure user and password to push images to dockerhub
+docker login 
+	enter username and password
+
+# after entering the username and password details, push the image.
+docker push lakshmanlucky821/flask-mongodb-app:latest

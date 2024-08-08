@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-mongodb-deployment
+  labels:
+    app: flask-mongodb-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-mongodb-app
+  template:
+    metadata:
+      labels:
+        app: flask-mongodb-app
+    spec:
+      containers:
+      - name: flask-mongodb-app
+        image: lakshmanlucky821/flask-mongodb-app:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: MONGODB_URI
+          value: "mongodb://root:password@db-headless:27017/"
+        resources:
+          requests:
+            memory: "250Mi"
+            cpu: "200m"
+          limits:
+            memory: "500Mi"
+            cpu: "500m"
+

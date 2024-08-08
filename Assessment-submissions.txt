@@ -1,0 +1,80 @@
+
+1.Providethe Dockerfile for the Flask application.
+2. Provideinstructions on how to build and push the Docker image to a container registry.
+3. Providethe Kubernetes YAML files for all resources created.
+4. ProvideaREADMEwithdetailed steps to deploy the Flask application and MongoDB on a Minikube Kubernetes cluster.
+5. Includeanexplanation of how DNS resolution works within the Kubernetes cluster for inter-pod communication.
+6 Includeanexplanation of resource requests and limits in Kubernetes.
+7. DesignChoices: Describe why you chose the specific configurations and setups, including any alternatives(if any) you considered and why
+    you did not choose them.
+8. Cookiepoint: Testing Scenarios: Detail how you tested autoscaling and database interactions, including simulating high traffic. Provide
+    results and any issues encountered during testing.
+
+
+Submissions:
+-----------
+1. dockerfile.txt   --- In Parent directory 
+2. docker-push-steps.txt --- In Parent directory
+3. kubernetes-yaml-files --- In Parent directory
+4. READ_ME.txt ----- In Parent directory
+
+5. DNS Resolution in Kubernetes
+   ----------------------------
+
+In a Kubernetes cluster, DNS resolution plays a vital role in enabling communication between pods. 
+Kubernetes uses a DNS service, When a pod needs to communicate with another pod or service, it resolves the service name to an IP address via DNS.
+
+For inter-pod communication, Kubernetes automatically creates DNS records for each service. 
+These records follow the format `service-name.namespace.svc.cluster.local`. 
+In this deployment, we have a service named `webapp-service` in the `default` namespace, the DNS record will be `webapp-service.default.svc.cluster.local`. 
+This allows pods to reach the service by name rather than hardcoding IP addresses, making the system more resilient and scalable.
+
+DNS resolution in Kubernetes is dynamic and updates automatically as services and pods are created or deleted, ensuring that the service discovery process is seamless and reliable.
+
+6. Resource Requests and Limits in Kubernetes
+   ------------------------------------------
+
+In Kubernetes, resource requests and resource limits are ways to manage and control resource allocation for containers.
+ Resource requests- define the minimum amount of CPU or memory a container requires to function properly. 
+	Kubernetes uses these values during scheduling to ensure that a pod is only placed on a node that has sufficient resources available.
+
+Resource limits- specify the maximum amount of resources a container can use. This prevents a container from consuming excessive resources, 
+	which could potentially kill other containers on the same node. 
+when container exceeds its resource limits, Kubernetes may throttle the container’s CPU usage or terminate it if it exceeds memory limits, restarting it to maintain system stability.
+
+By setting both requests and limits, you ensure that containers receive adequate resources while also preventing any single container from monopolizing resources, thus maintaining overall cluster health and performance.
+
+7. Design Choices
+   --------------
+
+Configurations and Setups:
+  Flask and MongoDB Containers: Separate Pod and deployments for Flask and MongoDB application was based on the principle of microservices architecture, where each component of the application runs in its container and pods. 
+	This separation allows for easier scaling, maintenance, and deployment. This is one of the Industry best practices, to deploy only one Application in a Pod.
+  StatefulSet for MongoDB: A StatefulSet was chosen for MongoDB to manage its persistent storage needs effectively, as it provides stable network identities and persistent storage for each pod, which is crucial for databases.
+  Headless Service for MongoDB: A headless service was used to facilitate direct communication between MongoDB instances, which is important for stateful applications that require stable network identities.
+  Ingress Configuration:  An Ingress controller was configured to manage external access to the services. The use of a custom Nginx Ingress controller allows for flexible routing 
+	and load balancing of incoming traffic to the services.
+  NodePort vs LoadBalancer: NodePort was not used as it would expose services on each node’s IP address, which is less flexible compared to using an Ingress for managing external access.
+
+8. Testing Scenarios
+   -----------------
+
+Autoscaling Testing:
+"kubectl autoscale deployment flask-mongodb-deployment --cpu-percent=70 --min=2 --max=5"
+  Setup: To test autoscaling, Horizontal Pod Autoscalers (HPAs) were configured based on CPU utilization. Traffic was simulated to increase CPU load and trigger autoscaling.
+  Results: The HPA successfully scaled the number of pods up and down based on the CPU usage metrics. During high traffic, the application scaled to handle the load effectively, and scaling down occurred when traffic decreased.
+script.sh	
+#!/bin/bash
+for i in {1..1000}
+do
+   curl http://app.example.com/
+   curl -X POST http://app.example.com/data -H "Content-Type: application/json" -d '{"name": "testuser", "age": 30}'
+done
+
+Database Interaction Testing:
+  Setup: High traffic was simulated by sending multiple concurrent requests to the Flask application, including data insertions and retrievals.
+  Results: The MongoDB database handled the increased load without significant performance degradation. Data was correctly stored and retrieved, demonstrating that the database and application could handle high volumes of requests.
+
+Issues Encountered:
+  Resource Constraints: During peak loads, some resource limits were reached, causing temporary throttling. This was addressed by adjusting resource requests and limits to better match the application’s requirements.
+
